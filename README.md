@@ -1,4 +1,4 @@
-# :package: apt
+# :package: apt :package:
 
 Serverless Debian/APT repository hosting custom `.deb` packages, served via GitHub Pages and built automatically with GitHub Actions.
 
