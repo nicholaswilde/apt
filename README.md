@@ -67,7 +67,7 @@ sudo apt install <package-name>
 
 3. GitHub Actions triggers automatically on changes under `pool/**/*.deb`:
    - Scans packages and generates APT indexes (`Packages`, `Release`, `InRelease`).
-   - Automatically synchronizes the package catalog on the Catppuccin Mocha landing page (`index.html`).
+   - Automatically synchronizes the package catalog on the Catppuccin Mocha landing page (`public/index.html`).
    - Deploys repository metadata and web UI to GitHub Pages.
 
 ---
@@ -81,7 +81,7 @@ This repository uses [`go-task`](https://taskfile.dev) for workflow automation:
 | `task test` | Run end-to-end APT repository verification against deployed endpoint |
 | `task test:unit` | Run Python unit test suite for catalog generator |
 | `task catalog` | Re-generate landing page package catalog from `pool/` and `dists/` |
-| `task catalog:check` | Verify `index.html` catalog matches repository packages |
+| `task catalog:check` | Verify `public/index.html` catalog matches repository packages |
 | `task lint` | Run all linters (`yamllint-rs`, `rumdl`, `taplo`) |
 | `task fmt` | Auto-format Markdown and TOML files |
 

@@ -283,8 +283,8 @@ def main() -> int:
     )
     parser.add_argument(
         "--index",
-        default="index.html",
-        help="Path to index.html (default: index.html)",
+        default="public/index.html",
+        help="Path to index.html (default: public/index.html)",
     )
     parser.add_argument(
         "--pool",
