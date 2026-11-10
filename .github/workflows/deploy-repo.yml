@@ -76,6 +76,9 @@ jobs:
           # 6. Export ASCII-armored public key to repository root
           gpg --armor --export "${{ steps.import-gpg.outputs.fingerprint }}" > public.key
 
+          # Clean up agent directories before Pages artifact upload
+          rm -rf .agents
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v4
 
