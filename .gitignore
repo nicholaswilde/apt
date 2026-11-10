@@ -38,3 +38,9 @@ public.key
 
 # Local notes
 prompt.md
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+

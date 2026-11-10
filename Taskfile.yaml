@@ -1,0 +1,47 @@
+---
+version: '3'
+
+tasks:
+  default:
+    desc: List all available tasks
+    cmds:
+      - task -a
+
+  test:
+    desc: Run end-to-end APT repository verification test
+    cmds:
+      - uv run python3 scripts/test_repo.py {{.URL | default "https://nicholaswilde.io/apt"}}
+
+  lock:
+    desc: Update and lock uv dependencies
+    cmds:
+      - uv lock
+
+  lint:
+    desc: Run all linters (yamllint, rumdl, taplo)
+    cmds:
+      - task: lint:yaml
+      - task: lint:md
+      - task: lint:toml
+
+  lint:yaml:
+    desc: Lint YAML files
+    cmds:
+      - yamllint-rs .
+
+  lint:md:
+    desc: Lint Markdown files
+    cmds:
+      - rumdl check .
+
+  lint:toml:
+    desc: Lint TOML files
+    cmds:
+      - taplo lint
+      - taplo fmt --check
+
+  fmt:
+    desc: Auto-format Markdown and TOML files
+    cmds:
+      - rumdl fmt .
+      - taplo fmt

@@ -2,6 +2,7 @@
 
 <!-- rtk-begin -->
 ## RTK Command Guidelines
+
 - **Git Operations**: Prefix `git` commands with `rtk` (e.g., `rtk git status`, `rtk git diff`, `rtk git log`, `rtk git commit`, `rtk git push`).
 - **GitHub CLI**: Prefix `gh` commands with `rtk` and pipe to `cat` (e.g., `rtk gh issue list | cat`, `rtk gh workflow run deploy-repo.yml | cat`). Always pipe to bypass interactive pagers.
 - **File & Directory Inspection**: Use `rtk ls`, `rtk tree`, `rtk find`, or `rtk read` when listing or reading files for token-optimized output.
@@ -13,6 +14,7 @@
 
 <!-- context-mode-begin -->
 ## Context-Mode Routing Guidelines
+
 - **Derive, Do Not Dump**: Do NOT use `ctx_execute_file` or `ctx_execute` to dump whole file or full config. Print only specific value, matches, count, or known line range needed.
 - **Tool Call Surface**: When using MCP wrappers, call `call_mcp_tool` with `ServerName: "context-mode_context-mode"` (or `"context-mode"`) and `ToolName: "ctx_execute"`, `"ctx_execute_file"`, `"ctx_batch_execute"`, `"ctx_fetch_and_index"`, `"ctx_search"`, or `"ctx_index"`.
 - **Mandatory Routing**:
@@ -26,6 +28,7 @@
 
 <!-- ponytail-begin -->
 ## Ponytail (Lazy Senior Dev Mode) Guidelines
+
 - **Stop at first rung that holds**:
   1. Need to build at all? (YAGNI)
   2. Already in codebase? Reuse existing helpers/utils/patterns.
@@ -45,9 +48,11 @@
 
 <!-- caveman-begin -->
 ## Caveman Guidelines
+
 Respond terse like smart caveman. All technical substance stay. Only fluff die.
 
 Rules:
+
 - Drop: articles (a/an/the), filler (just/really/basically), pleasantries, hedging.
 - Fragments OK. Short synonyms. Technical terms exact. Code unchanged.
 - Pattern: [thing] [action] [reason]. [next step].
@@ -64,7 +69,9 @@ Boundaries: code/commits/PRs written normal.
 
 <!-- codegraph-begin -->
 ## CodeGraph
+
 In repositories indexed by CodeGraph (`.codegraph/` directory exists at repo root), reach for it BEFORE grep/find or reading files when exploring code:
+
 - **MCP tool**: `codegraph_explore` answers source + call path + blast radius in one call.
 - **Shell**: `codegraph explore "<symbol names or question>"`.
 
@@ -73,7 +80,9 @@ If no `.codegraph/` directory exists, skip CodeGraph entirely.
 
 <!-- serena-begin -->
 ## Serena Semantic Navigation & LSP Integration
+
 Use Serena (`serena`) MCP tools for semantic navigation, AST symbol inspection, LSP diagnostics, and project memories:
+
 1. **Map first**: Call `get_symbols_overview` on target file instead of reading entire file.
 2. **Read target symbol only**: Call `find_symbol` with `include_body: true` for target function/class/method.
 3. **Check callers**: Call `find_referencing_symbols` or `find_implementations` before signature or behavior changes.
@@ -83,7 +92,9 @@ Use Serena (`serena`) MCP tools for semantic navigation, AST symbol inspection, 
 
 <!-- headroom-begin -->
 ## Headroom MCP (Context Window Compression)
+
 Use Headroom (`headroom`) MCP tools to manage context window consumption on large payloads:
+
 - `headroom_compress`: Shrink large tool outputs or raw data.
 - `headroom_retrieve`: Retrieve original content by hash if specific details needed.
 - `headroom_stats`: Monitor headroom cache usage.
@@ -91,7 +102,9 @@ Use Headroom (`headroom`) MCP tools to manage context window consumption on larg
 
 <!-- ripwire-begin -->
 ## Ripwire CLI Guidelines
+
 Use `ripwire` CLI (prefixed with `rtk ripwire`) for AST codebase mapping, call graphs, blast radius, and structural queries:
+
 - **CLI First**: Always invoke `rtk ripwire <dir> [flags]` via CLI; do NOT use MCP server.
 - **Task Orientation**: `rtk ripwire <dir> --for="<task>"` for ranked signatures and bodies.
 - **Task Bundle**: `rtk ripwire <dir> --pack-task="<task>" --legend=compact`.
@@ -102,12 +115,14 @@ Use `ripwire` CLI (prefixed with `rtk ripwire`) for AST codebase mapping, call g
 
 <!-- ripgrep-guidelines-begin -->
 ## Ripgrep Guidelines
+
 - **Pattern Searching**: Always use `rg` (ripgrep) or `rtk rg` instead of standard `grep` to search text inside files quickly and save token output.
 - **Scope**: Use `-l` for file listing, keep context small (`-C 1`).
 <!-- ripgrep-guidelines-end -->
 
 <!-- apt-repo-begin -->
 ## APT Repository Guidelines
+
 - **Pool Directory**: Raw `.deb` packages must be placed in `pool/main/` (or package subdirectories).
 - **Metadata Generation**: The `.github/workflows/deploy-repo.yml` workflow automatically scans packages (`dpkg-scanpackages`), builds release definitions (`apt-ftparchive`), clearsigns `InRelease`, generates detached `Release.gpg`, exports `public.key`, and deploys via GitHub Pages.
 - **Deployment Trigger**: Workflow triggers automatically on push to `main` when `pool/**/*.deb` changes, or manually via `workflow_dispatch`.
@@ -116,15 +131,19 @@ Use `ripwire` CLI (prefixed with `rtk ripwire`) for AST codebase mapping, call g
 
 <!-- issue-management-begin -->
 ## GitHub Issue Management
+
 When creating or updating GitHub issues, adhere to naming and labeling scheme:
-- **Features**: Prefix title with `[feat]: ` and apply `enhancement` label.
-- **Bugs**: Prefix title with `[bug]: ` and apply `bug` label.
+
+- **Features**: Prefix title with `[feat]:` and apply `enhancement` label.
+- **Bugs**: Prefix title with `[bug]:` and apply `bug` label.
 - **Commit Closing**: GitHub issues only close automatically when commits containing `Fixes #<number>` are pushed to remote repository.
 <!-- issue-management-end -->
 
 <!-- sensitive-information-protection-begin -->
 ## Sensitive Information Protection
+
 NEVER commit or stage sensitive credentials, tokens, or private keys to repository:
+
 1. **Secrets & Keys**: Never commit `.env` files, API keys, passwords, GPG private keys, or SSH credentials.
 2. **Explicit Staging**: Never use `git add .` when untracked files exist; stage explicitly by name.
 3. **Repository Cleanliness**: Ensure generated local APT artifacts (`dists/`, `apt-release.conf`, `public.key`) stay gitignored and are generated strictly in CI.

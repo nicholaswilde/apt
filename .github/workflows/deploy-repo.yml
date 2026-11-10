@@ -93,3 +93,26 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  verify:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install APT tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gpg gpgv apt-utils
+
+      - name: Verify repository deployment
+        run: |
+          sleep 15
+          uv run python3 scripts/test_repo.py https://nicholaswilde.io/apt
+

@@ -1,0 +1,30 @@
+name: APT Repository Health Check
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: healthcheck
+  cancel-in-progress: true
+
+jobs:
+  healthcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install APT tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gpg gpgv apt-utils
+
+      - name: Run E2E repository test suite
+        run: uv run python3 scripts/test_repo.py https://nicholaswilde.io/apt
