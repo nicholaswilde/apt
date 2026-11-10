@@ -72,7 +72,7 @@ components:
 
 ## Overview
 
-The landing page provides a clean, welcoming, and functional entrypoint for `https://nicholaswilde.io/apt/`. It mirrors the layout, aesthetics, and component architecture of `esp32-web-flasher` using the Catppuccin Mocha palette. The interface balances high aesthetic appeal with practical utility, prioritizing legible setup instructions, copy-to-clipboard code blocks, and transparent repository indexing.
+The landing page provides a clean, welcoming, and functional entrypoint for `https://nicholaswilde.io/apt/`. It mirrors the layout, aesthetics, and component architecture of `esp32-web-flasher` using the Catppuccin Mocha palette. Web assets reside in the `public/` directory (`public/index.html`, `public/favicon.svg`, `public/css/style.css`). The interface balances high aesthetic appeal with practical utility, prioritizing legible setup instructions, copy-to-clipboard code blocks, and transparent repository indexing.
 
 ## Colors
 

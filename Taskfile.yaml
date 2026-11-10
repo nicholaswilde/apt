@@ -18,12 +18,12 @@ tasks:
       - uv run python3 -m unittest discover tests
 
   catalog:
-    desc: Synchronize index.html package catalog with pool/ and dists/
+    desc: Synchronize public/index.html package catalog with pool/ and dists/
     cmds:
       - uv run python3 scripts/generate_catalog.py
 
   catalog:check:
-    desc: Verify index.html package catalog is in sync with pool/ and dists/
+    desc: Verify public/index.html package catalog is in sync with pool/ and dists/
     cmds:
       - uv run python3 scripts/generate_catalog.py --check
 

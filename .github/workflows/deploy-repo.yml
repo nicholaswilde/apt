@@ -6,9 +6,7 @@ on:
       - main
     paths:
       - 'pool/**/*.deb'
-      - 'index.html'
-      - 'css/**'
-      - 'favicon.svg'
+      - 'public/**'
   workflow_dispatch:
 
 permissions:
@@ -82,8 +80,11 @@ jobs:
           # 6. Export ASCII-armored public key to repository root
           gpg --armor --export "${{ steps.import-gpg.outputs.fingerprint }}" > public.key
 
-          # 7. Update index.html package catalog
-          python3 scripts/generate_catalog.py
+          # 7. Update public/index.html package catalog
+          python3 scripts/generate_catalog.py --index public/index.html
+
+          # 8. Copy public web assets to root for GitHub Pages
+          cp -r public/* .
 
           # Clean up agent directories before Pages artifact upload
           rm -rf .agents
