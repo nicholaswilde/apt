@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Serverless APT repository for custom Debian and Ubuntu packages, hosted by Nicholas Wilde via GitHub Pages."
+    />
+    <title>Nicholas Wilde APT Repository</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <header>
+      <a
+        id="repo-link"
+        class="header-link"
+        href="https://github.com/nicholaswilde/apt"
+        target="_blank"
+        rel="noopener noreferrer"
+        title="View source repository on GitHub"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="feather feather-github"
+        >
+          <path
+            d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"
+          ></path>
+        </svg>
+        <span>nicholaswilde/apt</span>
+      </a>
+    </header>
+
+    <main>
+      <div class="page-titles">
+        <h1>📦 Nicholas Wilde APT Repository 📦</h1>
+        <p>Serverless Debian/Ubuntu package repository hosted on GitHub Pages</p>
+      </div>
+
+      <section class="card">
+        <h2>Client Configuration</h2>
+        <p>
+          Configure your Debian or Ubuntu based system to install packages directly from this repository.
+        </p>
+
+        <h3><span class="step-number">1</span> Download Repository Signing Key</h3>
+        <p>Install the repository's ASCII-armored GPG public key into your system's keyring directory:</p>
+        <div class="code-container">
+          <div class="code-header">
+            <span>bash</span>
+            <button class="copy-btn" data-target="cmd-key" title="Copy to clipboard">
+              Copy
+            </button>
+          </div>
+          <pre class="code-block" id="cmd-key"><code>sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://nicholaswilde.io/apt/public.key | sudo gpg --dearmor -o /etc/apt/keyrings/nicholaswilde-apt.gpg
+sudo chmod a+r /etc/apt/keyrings/nicholaswilde-apt.gpg</code></pre>
+        </div>
+
+        <h3><span class="step-number">2</span> Add Repository Source</h3>
+        <p>Add the repository to your APT sources. Choose either the modern Deb822 format (Debian 12+ / Ubuntu 22.04+) or traditional one-line format:</p>
+
+        <p><strong>Option A: Modern Deb822 Format (Recommended)</strong></p>
+        <div class="code-container">
+          <div class="code-header">
+            <span>/etc/apt/sources.list.d/nicholaswilde.sources</span>
+            <button class="copy-btn" data-target="cmd-deb822" title="Copy to clipboard">
+              Copy
+            </button>
+          </div>
+          <pre class="code-block" id="cmd-deb822"><code>sudo tee /etc/apt/sources.list.d/nicholaswilde.sources &lt;&lt; 'EOF'
+Types: deb
+URIs: https://nicholaswilde.io/apt
+Suites: stable
+Components: main
+Signed-By: /etc/apt/keyrings/nicholaswilde-apt.gpg
+EOF</code></pre>
+        </div>
+
+        <p><strong>Option B: Traditional One-Line Format</strong></p>
+        <div class="code-container">
+          <div class="code-header">
+            <span>/etc/apt/sources.list.d/nicholaswilde-apt.list</span>
+            <button class="copy-btn" data-target="cmd-sources-list" title="Copy to clipboard">
+              Copy
+            </button>
+          </div>
+          <pre class="code-block" id="cmd-sources-list"><code>echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/nicholaswilde-apt.gpg] https://nicholaswilde.io/apt stable main" | sudo tee /etc/apt/sources.list.d/nicholaswilde-apt.list</code></pre>
+        </div>
+
+        <h3><span class="step-number">3</span> Update &amp; Install</h3>
+        <p>Refresh package indexes and install desired packages:</p>
+        <div class="code-container">
+          <div class="code-header">
+            <span>bash</span>
+            <button class="copy-btn" data-target="cmd-install" title="Copy to clipboard">
+              Copy
+            </button>
+          </div>
+          <pre class="code-block" id="cmd-install"><code>sudo apt update
+sudo apt install &lt;package-name&gt;</code></pre>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Available Packages</h2>
+        <p>Custom deb packages packaged and distributed from this repository:</p>
+
+        <div class="package-item">
+          <div class="package-header">
+            <span class="package-name">tfa</span>
+            <div class="package-badges">
+              <span class="badge badge-version">v0.1.16-1</span>
+              <span class="badge badge-component">stable/main</span>
+              <span class="badge badge-arch">amd64</span>
+              <span class="badge badge-arch">arm64</span>
+              <span class="badge badge-arch">armhf</span>
+              <span class="badge badge-arch">armel</span>
+            </div>
+          </div>
+          <p>
+            Two-Factor Authentication (2FA) command-line interface tool generating and managing TOTP / HOTP tokens securely from your terminal.
+          </p>
+          <div class="code-container">
+            <div class="code-header">
+              <span>install</span>
+              <button class="copy-btn" data-target="cmd-install-tfa" title="Copy to clipboard">
+                Copy
+              </button>
+            </div>
+            <pre class="code-block" id="cmd-install-tfa"><code>sudo apt install tfa</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Repository Details</h2>
+        <p>Metadata and direct asset endpoints for cryptographic verification:</p>
+
+        <div class="repo-info-grid">
+          <div class="info-item">
+            <div class="info-label">Base URL</div>
+            <div class="info-value">https://nicholaswilde.io/apt</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Suite / Codename</div>
+            <div class="info-value">stable</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Components</div>
+            <div class="info-value">main</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Architectures</div>
+            <div class="info-value">amd64, arm64, armhf, armel</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Signing Key</div>
+            <div class="info-value"><a href="public.key">public.key</a></div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">InRelease (Clearsigned)</div>
+            <div class="info-value"><a href="dists/stable/InRelease">dists/stable/InRelease</a></div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Release File</div>
+            <div class="info-value"><a href="dists/stable/Release">dists/stable/Release</a></div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Detached Signature</div>
+            <div class="info-value"><a href="dists/stable/Release.gpg">dists/stable/Release.gpg</a></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-content">
+        <div class="footer-left">
+          <p>
+            &copy; <span id="copyright-year">2026</span>
+            <a href="https://github.com/nicholaswilde" target="_blank" rel="noopener noreferrer">Nicholas Wilde</a>
+          </p>
+          <a
+            class="powered-by"
+            href="https://pages.github.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >Powered by GitHub Pages &amp; GitHub Actions</a>
+        </div>
+        <div class="footer-links">
+          <a
+            href="https://github.com/nicholaswilde/apt"
+            target="_blank"
+            rel="noopener noreferrer"
+          >GitHub Repository</a>
+          <a
+            href="https://github.com/nicholaswilde/apt/issues"
+            target="_blank"
+            rel="noopener noreferrer"
+          >Report an Issue</a>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      // Dynamic copyright year
+      const yearEl = document.getElementById("copyright-year");
+      if (yearEl) {
+        yearEl.textContent = new Date().getFullYear();
+      }
+
+      // Clipboard copy handler
+      document.querySelectorAll(".copy-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const targetId = btn.getAttribute("data-target");
+          const targetEl = document.getElementById(targetId);
+          if (!targetEl) return;
+
+          const textToCopy = targetEl.textContent.trim();
+          try {
+            await navigator.clipboard.writeText(textToCopy);
+            const origText = btn.textContent;
+            btn.textContent = "✓ Copied";
+            btn.classList.add("copied");
+            setTimeout(() => {
+              btn.textContent = origText;
+              btn.classList.remove("copied");
+            }, 2000);
+          } catch (err) {
+            console.error("Failed to copy:", err);
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
