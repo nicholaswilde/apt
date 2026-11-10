@@ -1,0 +1,40 @@
+# Configuration and secrets
+config.yaml
+config.yml
+config.toml
+config.json
+settings.json
+**/settings.json
+mcp_config.json
+**/*.creds
+.env
+.env.*
+!.env.enc
+!.env.example
+
+# OS and Editor files
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+
+# Build and APT artifacts
+dists/
+apt-release.conf
+public.key
+
+# Agentic Stack & MCP Caches
+.codegraph/
+.serena/
+.rumdl_cache/
+.agents/*
+!.agents/skills/
+!.agents/rules/
+!.agents/skills_catalog.md
+.rtk/*
+!.rtk/filters.toml
+
+# Local notes
+prompt.md

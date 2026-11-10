@@ -1,0 +1,89 @@
+name: Deploy APT Repository
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'pool/**/*.deb'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install APT tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dpkg-dev apt-utils
+
+      - name: Import GPG key
+        id: import-gpg
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Generate APT metadata
+        run: |
+          set -euo pipefail
+
+          # 1. Create binary architecture directory
+          mkdir -p dists/stable/main/binary-amd64
+
+          # 2. Scan packages and create Packages + Packages.gz
+          dpkg-scanpackages --multiversion pool/ > dists/stable/main/binary-amd64/Packages
+          gzip -9k -f dists/stable/main/binary-amd64/Packages
+
+          # 3. Create apt-release.conf
+          cat << 'EOF' > apt-release.conf
+          APT::FTPArchive::Release::Origin "apt";
+          APT::FTPArchive::Release::Label "apt";
+          APT::FTPArchive::Release::Suite "stable";
+          APT::FTPArchive::Release::Codename "stable";
+          APT::FTPArchive::Release::Architectures "amd64";
+          APT::FTPArchive::Release::Components "main";
+          EOF
+
+          # 4. Generate Release file
+          apt-ftparchive -c apt-release.conf release dists/stable > dists/stable/Release
+          rm -f apt-release.conf
+
+          # 5. Sign Release file (detached signature and clearsigned)
+          gpg --batch --yes --armor --detach-sign \
+            --default-key "${{ steps.import-gpg.outputs.fingerprint }}" \
+            --output dists/stable/Release.gpg dists/stable/Release
+
+          gpg --batch --yes --clearsign \
+            --default-key "${{ steps.import-gpg.outputs.fingerprint }}" \
+            --output dists/stable/InRelease dists/stable/Release
+
+          # 6. Export ASCII-armored public key to repository root
+          gpg --armor --export "${{ steps.import-gpg.outputs.fingerprint }}" > public.key
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
