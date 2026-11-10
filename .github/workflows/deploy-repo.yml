@@ -82,6 +82,9 @@ jobs:
           # 6. Export ASCII-armored public key to repository root
           gpg --armor --export "${{ steps.import-gpg.outputs.fingerprint }}" > public.key
 
+          # 7. Update index.html package catalog
+          python3 scripts/generate_catalog.py
+
           # Clean up agent directories before Pages artifact upload
           rm -rf .agents
 
