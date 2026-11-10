@@ -6,6 +6,9 @@ on:
       - main
     paths:
       - 'pool/**/*.deb'
+      - 'index.html'
+      - 'css/**'
+      - 'favicon.svg'
   workflow_dispatch:
 
 permissions:
