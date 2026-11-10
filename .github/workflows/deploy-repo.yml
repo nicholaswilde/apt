@@ -43,12 +43,15 @@ jobs:
         run: |
           set -euo pipefail
 
-          # 1. Create binary architecture directory
-          mkdir -p dists/stable/main/binary-amd64
+          # 1. Supported Debian architectures (amd64, arm64, armhf [armv7], armel [armv6])
+          ARCHS="amd64 arm64 armhf armel"
 
-          # 2. Scan packages and create Packages + Packages.gz
-          dpkg-scanpackages --multiversion pool/ > dists/stable/main/binary-amd64/Packages
-          gzip -9k -f dists/stable/main/binary-amd64/Packages
+          # 2. Scan packages and create Packages + Packages.gz for each architecture
+          for arch in $ARCHS; do
+            mkdir -p "dists/stable/main/binary-${arch}"
+            dpkg-scanpackages --arch "$arch" --multiversion pool/ > "dists/stable/main/binary-${arch}/Packages"
+            gzip -9k -f "dists/stable/main/binary-${arch}/Packages"
+          done
 
           # 3. Create apt-release.conf
           cat << 'EOF' > apt-release.conf
@@ -56,7 +59,7 @@ jobs:
           APT::FTPArchive::Release::Label "apt";
           APT::FTPArchive::Release::Suite "stable";
           APT::FTPArchive::Release::Codename "stable";
-          APT::FTPArchive::Release::Architectures "amd64";
+          APT::FTPArchive::Release::Architectures "amd64 arm64 armhf armel";
           APT::FTPArchive::Release::Components "main";
           EOF
 
