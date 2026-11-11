@@ -1,4 +1,4 @@
-# :package: apt :package:
+# :package: apt :cyclone:
 
 Serverless Debian/APT repository hosting custom `.deb` packages, served via GitHub Pages and built automatically with GitHub Actions.
 
