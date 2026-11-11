@@ -148,3 +148,9 @@ NEVER commit or stage sensitive credentials, tokens, or private keys to reposito
 2. **Explicit Staging**: Never use `git add .` when untracked files exist; stage explicitly by name.
 3. **Repository Cleanliness**: Ensure generated local APT artifacts (`dists/`, `apt-release.conf`, `public.key`) stay gitignored and are generated strictly in CI.
 <!-- sensitive-information-protection-end -->
+
+<!-- design-begin -->
+## Design System
+
+Follow GUI design tokens and specifications in [.agents/design.md](.agents/design.md) when modifying web pages, templates, or documentation UI.
+<!-- design-end -->
