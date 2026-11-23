@@ -1,0 +1,261 @@
+# apt
+
+> Serverless Debian/APT repository hosting custom `.deb` packages, served via GitHub Pages and built automatically with GitHub Actions.
+
+Serverless APT repository serving Debian binary packages (`.deb`) across multiple architectures (`amd64`, `arm64`, `armhf`, `armel`) at `https://nicholaswilde.io/apt`. Packages placed in `pool/main/` trigger GitHub Actions pipelines that build index files (`Packages`, `Packages.gz`), generate and cryptographically sign release metadata (`Release`, `Release.gpg`, `InRelease`) with GPG, and deploy to GitHub Pages with automated end-to-end verification.
+
+---
+
+## Table of Contents
+
+1. [Overview & Features](#overview--features)
+2. [Repository Architecture & Layout](#repository-architecture--layout)
+3. [Client Configuration & Usage](#client-configuration--usage)
+4. [Adding & Managing Packages](#adding--managing-packages)
+5. [CI/CD Deployment Pipeline](#cicd-deployment-pipeline)
+6. [Automated Verification & Healthcheck](#automated-verification--healthcheck)
+7. [Taskfile Automation & Quality Gates](#taskfile-automation--quality-gates)
+8. [Agent Rules & Skills](#agent-rules--skills)
+9. [License & Maintainer](#license--maintainer)
+
+---
+
+## Overview & Features
+
+- **Serverless & Static:** Entire APT repository is hosted statically on GitHub Pages with zero server infrastructure overhead.
+- **Multi-Architecture Support:** Indexes and distributes packages for `amd64`, `arm64`, `armhf` (ARMv7), and `armel` (ARMv6).
+- **Cryptographic Security:** Every release is signed with GPG, producing both clearsigned `InRelease` and detached `Release.gpg` metadata, verified against the exported public key (`public.key`).
+- **Automated Metadata Generation:** GitHub Actions automatically scans `.deb` packages with `dpkg-scanpackages`, constructs release metadata via `apt-ftparchive`, and generates compressed `Packages.gz` archives.
+- **End-to-End Automated Testing:** Integrated Python test suite (`scripts/test_repo.py`) validates HTTP accessibility, `gpgv` signature validity, Release file SHA256 hashes, and executes simulated `apt-get` and `apt-cache` operations in an isolated temporary directory.
+- **Continuous Health Checks:** Scheduled daily GitHub Actions workflow verifies repository availability and signature integrity.
+
+---
+
+## Repository Architecture & Layout
+
+### Source Repository Structure
+
+```text
+apt/
+├── .agents/                      # Agent rules, workflows, and task skills
+│   ├── rules/
+│   │   ├── apt-rules.md          # Repository constraints and rules
+│   │   └── ...                   # Symlinked global agent guidelines
+│   └── skills/
+│       └── deploy-apt-repo/      # Skill for triggering and monitoring deployment
+├── .github/
+│   └── workflows/
+│       ├── deploy-repo.yml       # Build, sign, deploy to Pages, and verify
+│       └── healthcheck.yml       # Daily scheduled repository healthcheck
+├── pool/
+│   └── main/                     # Raw Debian package (.deb) binary storage
+│       └── tfa_0.1.16-1_amd64.deb
+├── scripts/
+│   └── test_repo.py              # Automated 4-phase end-to-end test suite
+├── .gitignore                    # Ignores generated dists, local keys, caches
+├── .rumdl.toml                   # Rumdl Markdown linter configuration
+├── .yamllint                     # Yamllint configuration
+├── AGENTS.md                     # Agent development instructions and guidelines
+├── LICENSE                       # Apache License 2.0
+├── pyproject.toml                # Python project configuration for uv
+├── README.md                     # User documentation and setup instructions
+├── Taskfile.yaml                 # Task automation definitions
+└── uv.lock                       # Locked Python dependencies
+```
+
+### Deployed Static APT Repository Layout
+
+When deployed to GitHub Pages at `https://nicholaswilde.io/apt`, the directory tree exposed to clients is structured as follows:
+
+```text
+https://nicholaswilde.io/apt/
+├── public.key                                    # ASCII-armored GPG public key
+├── pool/
+│   └── main/
+│       └── <package>_<version>_<arch>.deb        # Binary Debian packages
+└── dists/
+    └── stable/
+        ├── InRelease                             # Clearsigned Release file
+        ├── Release                               # Unsigned Release index with hashes
+        ├── Release.gpg                           # Detached GPG signature
+        └── main/
+            ├── binary-amd64/
+            │   ├── Packages                      # Plaintext package catalog
+            │   └── Packages.gz                   # Gzip-compressed package catalog
+            ├── binary-arm64/
+            │   ├── Packages
+            │   └── Packages.gz
+            ├── binary-armhf/
+            │   ├── Packages
+            │   └── Packages.gz
+            └── binary-armel/
+                ├── Packages
+                └── Packages.gz
+```
+
+---
+
+## Client Configuration & Usage
+
+Clients running Debian, Ubuntu, Raspberry Pi OS, or compatible derivatives configure the repository using standard APT tooling.
+
+### Step 1: Add Repository Signing Key
+
+Download the ASCII-armored public key, dearmor it into a binary GPG keyring, and save it in `/etc/apt/keyrings/`:
+
+```bash
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://nicholaswilde.io/apt/public.key | sudo gpg --dearmor -o /etc/apt/keyrings/nicholaswilde-apt.gpg
+sudo chmod a+r /etc/apt/keyrings/nicholaswilde-apt.gpg
+```
+
+### Step 2: Add APT Source List
+
+Create `/etc/apt/sources.list.d/nicholaswilde-apt.list` referencing the keyring and target architecture:
+
+```bash
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/nicholaswilde-apt.gpg] https://nicholaswilde.io/apt stable main" | sudo tee /etc/apt/sources.list.d/nicholaswilde-apt.list
+```
+
+### Step 3: Update & Install
+
+Update local APT package indices and install packages:
+
+```bash
+sudo apt update
+sudo apt install <package-name>
+```
+
+---
+
+## Adding & Managing Packages
+
+### Adding a New `.deb` Package
+
+1. Place the compiled `.deb` package file in `pool/main/`:
+
+   ```bash
+   cp my-package_1.0.0_amd64.deb pool/main/
+   ```
+
+2. Stage and commit the package file explicitly:
+
+   ```bash
+   git add pool/main/my-package_1.0.0_amd64.deb
+   git commit -m "feat(pkg): add my-package 1.0.0"
+   git push origin main
+   ```
+
+3. The push event automatically triggers `.github/workflows/deploy-repo.yml`, which:
+   - Scans the new package into architecture-specific `Packages` indices.
+   - Recomputes SHA256 checksums in `Release`.
+   - Clearsigns and signs with the repository GPG key.
+   - Deploys the updated static site to GitHub Pages.
+   - Runs post-deployment verification.
+
+---
+
+## CI/CD Deployment Pipeline
+
+The repository build and deployment logic is automated in `.github/workflows/deploy-repo.yml`.
+
+### Triggers & Permissions
+
+- **Triggers:**
+  - Push to `main` modifying path `pool/**/*.deb`.
+  - Manual execution via `workflow_dispatch`.
+- **Permissions:**
+  - `contents: read`
+  - `pages: write`
+  - `id-token: write`
+- **Concurrency:** Grouped under `pages` to prevent overlapping deployments.
+
+### Workflow Stages
+
+1. **Environment Setup:** Ubuntu latest runner checks out the repository and installs `dpkg-dev` and `apt-utils`.
+2. **GPG Key Import:** Uses `crazy-max/ghaction-import-gpg@v6` with secrets `GPG_PRIVATE_KEY` and `GPG_PASSPHRASE`.
+3. **Index Generation (`dpkg-scanpackages`):**
+   - Loops over supported architectures: `amd64`, `arm64`, `armhf`, `armel`.
+   - Generates `dists/stable/main/binary-${arch}/Packages` using `dpkg-scanpackages --arch "$arch" --multiversion pool/`.
+   - Creates compressed `Packages.gz` with `gzip -9k -f`.
+4. **Release Metadata Generation (`apt-ftparchive`):**
+   - Writes temporary `apt-release.conf` specifying Origin, Label, Suite, Codename, Architectures, and Components.
+   - Runs `apt-ftparchive -c apt-release.conf release dists/stable > dists/stable/Release`.
+5. **Cryptographic Signing (`gpg`):**
+   - Creates detached binary signature: `dists/stable/Release.gpg`.
+   - Creates inline clearsigned signature: `dists/stable/InRelease`.
+   - Exports ASCII-armored public key to root: `public.key`.
+6. **Pages Artifact Upload & Deployment:**
+   - Cleans agent workspace directories (`rm -rf .agents`).
+   - Configures GitHub Pages and uploads root directory artifact via `actions/upload-pages-artifact@v3`.
+   - Deploys artifact to GitHub Pages via `actions/deploy-pages@v4`.
+7. **Post-Deployment Verification:**
+   - Waits 15 seconds for CDN propagation.
+   - Runs `uv run python3 scripts/test_repo.py https://nicholaswilde.io/apt`.
+
+### Repository Secrets Required
+
+| Secret | Description |
+|---|---|
+| `GPG_PRIVATE_KEY` | ASCII-armored private key export used to sign Release files |
+| `GPG_PASSPHRASE` | Passphrase for the private key (blank if unprotected) |
+
+---
+
+## Automated Verification & Healthcheck
+
+The verification script `scripts/test_repo.py` runs end-to-end assertions against the deployed repository.
+
+### Test Phases
+
+1. **Phase 1: Core HTTP Endpoints:**
+   Fetches and verifies availability of `public.key`, `dists/stable/Release`, `dists/stable/Release.gpg`, and `dists/stable/InRelease`.
+2. **Phase 2: Cryptographic Signature Verification (`gpgv`):**
+   Dearmors `public.key` to a temporary keyring and validates both `InRelease` (clearsigned) and `Release.gpg` + `Release` (detached signature) using `gpgv`.
+3. **Phase 3: Release Index & Architecture Checksums:**
+   Parses `SHA256:` table in `Release` and verifies that `main/binary-{arch}/Packages` and `Packages.gz` match the declared hashes and byte sizes across all architectures (`amd64`, `arm64`, `armhf`, `armel`).
+4. **Phase 4: Simulated APT Client Execution:**
+   Sets up a sandboxed APT directory hierarchy (`etc/apt/`, `var/lib/apt/`, `var/lib/dpkg/status`) in a temporary directory and executes:
+   - `apt-get update` against the repository source.
+   - `apt-cache show <pkg>` to inspect package metadata.
+   - `apt-get download <pkg>` to test binary package retrieval.
+
+### Daily Healthcheck Workflow
+
+The workflow `.github/workflows/healthcheck.yml` runs every day at 06:00 UTC (`0 6 * * *`) and on manual dispatch to run `test_repo.py` against production.
+
+---
+
+## Taskfile Automation & Quality Gates
+
+The project uses [go-task](https://taskfile.dev) (`Taskfile.yaml`) for local task execution and quality control.
+
+| Task | Command | Description |
+|---|---|---|
+| `task default` | `task -a` | List all available tasks |
+| `task test` | `uv run python3 scripts/test_repo.py [URL]` | Run E2E repository verification test against target URL |
+| `task lock` | `uv lock` | Update and lock Python dependencies |
+| `task lint` | `task: lint:yaml`, `task: lint:md`, `task: lint:toml` | Run all linters across the repo |
+| `task lint:yaml` | `yamllint-rs .` | Lint YAML files using `yamllint-rs` |
+| `task lint:md` | `rumdl check .` | Lint Markdown files using `rumdl` |
+| `task lint:toml` | `taplo lint && taplo fmt --check` | Lint and validate TOML files with `taplo` |
+| `task fmt` | `rumdl fmt . && taplo fmt` | Auto-format Markdown and TOML files |
+
+---
+
+## Agent Rules & Skills
+
+- **`.agents/rules/apt-rules.md`:** Restricts manual modification of generated APT metadata (`dists/`, `public.key`) and enforces repository conventions.
+- **`.agents/skills/deploy-apt-repo/`:** Allows agents to trigger and monitor repository deployments via GitHub CLI (`gh`).
+- **Tooling Standards:**
+  - Prefix shell commands with `rtk` (e.g. `rtk git status`, `rtk gh ... | cat`).
+  - Run Python scripts and dependency management via `uv` (`rtk uv run ...`).
+  - Use `yamllint-rs`, `rumdl`, and `taplo` for linting.
+
+---
+
+## License & Maintainer
+
+- **License:** [Apache License 2.0](LICENSE)
+- **Maintainer:** [Nicholas Wilde](https://github.com/nicholaswilde)
+- **Repository:** [https://github.com/nicholaswilde/apt](https://github.com/nicholaswilde/apt)

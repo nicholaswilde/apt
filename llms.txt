@@ -1,0 +1,37 @@
+# apt
+
+> Serverless Debian/APT repository hosting custom `.deb` packages, served via GitHub Pages and built automatically with GitHub Actions.
+
+Serverless APT repository serving Debian binary packages (`.deb`) across multiple architectures (`amd64`, `arm64`, `armhf`, `armel`) at `https://nicholaswilde.io/apt`. Packages placed in `pool/main/` trigger GitHub Actions pipelines that build index files (`Packages`, `Packages.gz`), generate and cryptographically sign release metadata (`Release`, `Release.gpg`, `InRelease`) with GPG, and deploy to GitHub Pages with automated end-to-end verification.
+
+## Documentation
+
+- [README.md](README.md): Client setup instructions, repository configuration, package addition guide, and secrets setup.
+- [AGENTS.md](AGENTS.md): Repository architecture, agent workflows, RTK command standards, and tool guidelines.
+- [Full Context (llms-full.txt)](llms-full.txt): Complete consolidated technical documentation and architecture reference.
+
+## Repository Layout & Packages
+
+- [pool/main/](pool/main/): Directory storing raw `.deb` Debian package binaries.
+- [pool/main/tfa_0.1.16-1_amd64.deb](pool/main/tfa_0.1.16-1_amd64.deb): Hosted Debian package for `tfa` (2FA CLI utility).
+
+## Workflows & CI
+
+- [.github/workflows/deploy-repo.yml](.github/workflows/deploy-repo.yml): GitHub Actions deployment workflow triggered on `.deb` pushes or dispatch to generate metadata, sign releases, deploy to Pages, and verify.
+- [.github/workflows/healthcheck.yml](.github/workflows/healthcheck.yml): Scheduled daily cron job and workflow dispatch running the end-to-end verification suite against production.
+
+## Testing & Automation
+
+- [scripts/test_repo.py](scripts/test_repo.py): End-to-end Python test suite verifying HTTP endpoints, GPG signatures with `gpgv`, SHA256 checksums, and simulated `apt-get` client operations.
+- [Taskfile.yaml](Taskfile.yaml): Task automation runner for testing, dependency locking, formatting, and linting (`yamllint-rs`, `rumdl`, `taplo`).
+- [pyproject.toml](pyproject.toml): Python configuration and metadata for running repo scripts with `uv`.
+
+## Agent Guidelines & Skills
+
+- [.agents/rules/apt-rules.md](.agents/rules/apt-rules.md): Core repository constraints, `.deb` package handling, and signing rules.
+- [.agents/skills/deploy-apt-repo/SKILL.md](.agents/skills/deploy-apt-repo/SKILL.md): Skill for triggering and monitoring repository deployments.
+
+## Optional
+
+- [LICENSE](LICENSE): Apache License 2.0.
+- [Author](https://github.com/nicholaswilde): Nicholas Wilde GitHub profile.
